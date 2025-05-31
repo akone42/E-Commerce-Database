@@ -1,18 +1,10 @@
--- Active: 1746255433403@@127.0.0.1@3306
--- # Put all of your SQL here
 
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS country;
 CREATE TABLE country (
     country_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     country VARCHAR(255) NOT NULL,
     INDEX idx_country_name (country)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
-
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS city;
 CREATE TABLE city (
     city_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     city VARCHAR(255) NOT NULL,
@@ -20,10 +12,7 @@ CREATE TABLE city (
     UNIQUE (city, country_id),
     FOREIGN KEY (country_id) REFERENCES country(country_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
-
--- SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS seller;
 CREATE TABLE seller (
     seller_id INT UNSIGNED PRIMARY KEY,
@@ -32,11 +21,7 @@ CREATE TABLE seller (
     INDEX idx_seller_name (seller_name),
     FOREIGN KEY (seller_country) REFERENCES country(country_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
-
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS buyer;
 CREATE TABLE buyer (
     buyer_id INT UNSIGNED PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -47,10 +32,6 @@ CREATE TABLE buyer (
     INDEX idx_buyer_name (first_name, last_name),
     FOREIGN KEY (city_id) REFERENCES city(city_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
-
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS product;
 
 CREATE TABLE product (
     product_id INT UNSIGNED  PRIMARY KEY,
@@ -59,12 +40,7 @@ CREATE TABLE product (
     seller_id INT UNSIGNED NOT NULL,
     FOREIGN KEY (seller_id) REFERENCES seller(seller_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
-
-
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS credit_card;
 CREATE TABLE credit_card (
     cc_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     cc_number VARCHAR(256) NOT NULL,
@@ -73,10 +49,7 @@ CREATE TABLE credit_card (
     UNIQUE (buyer_id, cc_number),
     FOREIGN KEY (buyer_id) REFERENCES buyer(buyer_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
     order_id INT UNSIGNED  PRIMARY KEY,
     order_quantity INT UNSIGNED NOT NULL,
@@ -89,10 +62,7 @@ CREATE TABLE orders (
     FOREIGN KEY (buyer_id) REFERENCES buyer(buyer_id),
     FOREIGN KEY (cc_id) REFERENCES credit_card(cc_id)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
--- SET FOREIGN_KEY_CHECKS = 0;
--- DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews (
     review_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
@@ -101,7 +71,6 @@ CREATE TABLE reviews (
     FOREIGN KEY (order_id) REFERENCES orders(order_id),
     INDEX idx_reviews_rating (rating)
 );
--- SET FOREIGN_KEY_CHECKS = 1;
 
 DELIMITER $$
 
@@ -142,21 +111,7 @@ LIMIT 10;
 
 DELIMITER $$
 
--- SELECT * FROM top_rated_products;
 
-
--- EXPLAIN
--- SELECT 
---         orders.order_id AS order_id, 
---         orders.order_quantity AS order_quantity, 
---         product.product_name AS product_name, 
---         orders.order_date AS order_date
---     FROM buyer
---     JOIN orders ON buyer.buyer_id = orders.buyer_id
---     JOIN product ON orders.product_id = product.product_id
---     WHERE buyer.first_name = "Leland" 
---       AND buyer.last_name = "Kilback" 
---       AND orders.order_date = "2019-07-23";
 CREATE PROCEDURE buyer_for_date(IN in_first_name VARCHAR(255), IN in_last_name VARCHAR(255), IN in_order_date DATE)
 BEGIN
     SELECT 
@@ -173,10 +128,7 @@ BEGIN
 END $$
 DELIMITER ;
 
--- SELECT b.first_name, b.last_name, o.order_date
--- FROM   orders o
--- JOIN   buyer  b ON b.buyer_id = o.buyer_id
--- LIMIT 10;
+
 
 CREATE VIEW top_five_buyer_cities AS
 SELECT 
@@ -191,7 +143,7 @@ ORDER BY SUM(product.product_price * orders.order_quantity) DESC
 LIMIT 5;
 
 
--- DROP PROCEDURE IF EXISTS sales_for_month;
+
 DELIMITER $$
 
 CREATE PROCEDURE sales_for_month(IN in_date DATE)
@@ -208,7 +160,7 @@ END $$
 DELIMITER ;
 
 
--- DROP VIEW seller_sales_tiers;
+
 CREATE VIEW seller_sales_tiers AS 
 SELECT 
     seller.seller_id AS seller_id, 
@@ -225,23 +177,6 @@ JOIN orders ON product.product_id = orders.product_id
 GROUP BY seller.seller_id, seller.seller_name
 ORDER BY SUM(product.product_price * orders.order_quantity) DESC;
 
-
--- SELECT * FROM seller_sales_tiers;
-
-
--- EXPLAIN
--- SELECT seller.seller_id AS seller_id, product.product_id AS product_id, product.product_name AS product_name,
---            CONCAT('$', FORMAT(SUM(product.product_price * orders.order_quantity) / 100, 2)) AS total_sales
-   
---     FROM seller 
---     JOIN product ON seller.seller_id = "38973"
---     JOIN orders ON product.product_id = "84245"
---     WHERE seller.seller_name = Kassulke, "Rice and McCullough"
---     GROUP BY seller.seller_id, product.product_id, product.product_name
---     ORDER BY SUM(product.product_price * orders.order_quantity) DESC;
-
-
--- DROP PROCEDURE IF EXISTS top_products_for_seller;
 DELIMITER $$
 
 CREATE PROCEDURE top_products_for_seller(IN in_seller_name VARCHAR(255))
@@ -260,23 +195,6 @@ END $$
 DELIMITER ;
 
 
-
-
--- EXPLAIN
---  SELECT seller.seller_id AS seller_id, orders.order_id AS order_id, orders.order_date AS order_date, 
---     CONCAT('$', FORMAT(product.product_price * orders.order_quantity / 100, 2))  AS order_total, 
---     CONCAT('$', FORMAT(
---             SUM(product.product_price * orders.order_quantity)
---             OVER (PARTITION BY seller.seller_id
---                   ORDER BY orders.order_date, orders.order_id) / 100, 2)
---         ) AS running_total
-
---     FROM seller 
---     JOIN product ON seller.seller_id = 38973
---     JOIN orders ON product.product_id = 84245
---     WHERE seller.seller_name = "Kassulke, Rice and McCullough" ;
-
--- DROP PROCEDURE IF EXISTS seller_running_totals;
 DELIMITER $$
 
 CREATE PROCEDURE seller_running_totals(IN in_seller_name VARCHAR(255))
@@ -296,12 +214,6 @@ BEGIN
 END $$
 
 DELIMITER ;
-
--- CALL seller_running_totals('Kassulke, Rice and McCullough');
-
--- SELECT * 
--- FROM   seller_sales_tiers
--- ORDER  BY total_sales DESC;
 
 
 INSERT IGNORE INTO country (country)
@@ -343,32 +255,7 @@ INSERT IGNORE INTO reviews (order_id, review, rating)
 SELECT order_id, review, rating
 FROM denormalized_orders;
 
-
-
-
-
-
-
-
-
-
--- select * from denormalized_orders;
--- CALL sales_for_month(3, 2026);
-
-
-
-
-
-
-
-
-
-
-
-
-
 CALL sales_for_month( "2019-07-23");
-
 
 -- CALL sales_for_month('2020-04-01');
 
